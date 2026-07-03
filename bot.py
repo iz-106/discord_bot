@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 # 最新のトークンに更新しました
-TOKEN = "MTUyMjU2NjY3MTg3OTg5NzI2Mg.GHm8n6.OpNt9yPFxvyjif1N_6gu-hwvqYaAsuZ3b6HuU8"
+TOKEN = "MTUyMjU2NjY3MTg3OTg5NzI2Mg.G6vfiX.rcYmviEh7I2mv-ArXMea_RiUR8pUPSkXElV-bg"
 
 intents = discord.Intents.default()
 intents.members = True          # メンバー管理の権限
