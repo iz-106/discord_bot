@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import threading
 
 # あなたのトークン
-TOKEN = "MTUyMjU2NjY3MTg0OTg5NzI2Mg.G1HMWW.Eh16L0A6msTnY5-v3Y-fLtP2f130RsymePu73o"
+TOKEN = "MTUyMjU2NjY3MTg3OTg5NzI2Mg.Gr6YY2.i7Vji_KVfoCfWXhKTRZDNwdIXvK3AR5VS041kQ"
 
 # イベント用の専用ロールの名前
 ROLE_NAME = "イベント参加者"
