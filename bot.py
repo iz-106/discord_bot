@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
 
-# あなたのトークン（後ろの「"」も付いています）
-TOKEN = "MTUyMjU2NjY3MTg3OTg5NzI2Mg.GGTweW.46IBReqaFjyMU2CKxKbHW8fn28PiFYZQA8wO9A"
+# あなたのトークン
+TOKEN = "MTUyMjU2NjY3MTg0OTg5NzI2Mg.G1HMWW.Eh16L0A6msTnY5-v3Y-fLtP2f130RsymePu73o"
 
 # イベント用の専用ロールの名前
 ROLE_NAME = "イベント参加者"
@@ -11,8 +13,20 @@ intents = discord.Intents.default()
 intents.members = True          # メンバー管理の権限
 intents.guild_scheduled_events = True  # イベント管理の権限
 
-# ★ここを正しい書き方に修正しました
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# --- 居眠り防止用（Render用のダミーWebサーバー） ---
+class DummyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+
+def run_server():
+    server = HTTPServer(("0.0.0.0", 10000), DummyServer)
+    server.serve_forever()
+# --- ここまで ---
 
 # Botが起動したとき
 @bot.event
@@ -24,15 +38,11 @@ async def on_ready():
 async def on_scheduled_event_user_add(event, user):
     guild = event.guild
     role = discord.utils.get(guild.roles, name=ROLE_NAME)
-    
     if not role:
         role = await guild.create_role(name=ROLE_NAME, mentionable=True)
-        print(f"ロール「{ROLE_NAME}」を作成しました。")
-
     member = guild.get_member(user.id)
     if member:
         await member.add_roles(role)
-        print(f"{member.display_name} にロールを付与しました。")
 
 # ユーザーが「興味あり」を取り消したとき
 @bot.event
@@ -43,7 +53,6 @@ async def on_scheduled_event_user_remove(event, user):
         member = guild.get_member(user.id)
         if member:
             await member.remove_roles(role)
-            print(f"{member.display_name} からロールを削除しました。")
 
 # イベントの状態が更新されたとき（終了またはキャンセル）
 @bot.event
@@ -51,11 +60,21 @@ async def on_scheduled_event_update(before, after):
     if after.status in [discord.EventStatus.completed, discord.EventStatus.canceled]:
         guild = after.guild
         role = discord.utils.get(guild.roles, name=ROLE_NAME)
-        
         if role:
-            print(f"イベント「{after.name}」が終了したため、ロールを全員から外します。")
             for member in role.members:
                 await member.remove_roles(role)
-                print(f"{member.display_name} からロールを外しました。")
+
+# ★新機能：イベント自体が「削除」されたとき
+@bot.event
+async def on_scheduled_event_delete(event):
+    guild = event.guild
+    role = discord.utils.get(guild.roles, name=ROLE_NAME)
+    if role:
+        print(f"イベント「{event.name}」が削除されたため、ロールを全員から外します。")
+        for member in role.members:
+            await member.remove_roles(role)
+
+# Webサーバーを裏で同時に起動する
+threading.Thread(target=run_server, daemon=True).start()
 
 bot.run(TOKEN)
